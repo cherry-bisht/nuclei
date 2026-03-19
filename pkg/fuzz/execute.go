@@ -5,6 +5,7 @@ import (
 	"io"
 	"maps"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -229,8 +230,14 @@ func (rule *Rule) evaluateVarsWithInteractsh(data map[string]interface{}, intera
 			interactshUrlsMap[url] = struct{}{}
 		}
 		interactshUrls = mapsutil.GetKeys(interactshUrlsMap)
+		sort.Strings(interactshUrls)
+
+		dataKeys := mapsutil.GetKeys(data)
+		sort.Strings(dataKeys)
+
 		// Iterate through the data to replace and evaluate variables with Interactsh URLs
-		for k, v := range data {
+		for _, k := range dataKeys {
+			v := data[k]
 			value := fmt.Sprint(v)
 			// Replace variables with Interactsh URLs and collect new URLs
 			got, oastUrls := rule.options.Interactsh.Replace(value, interactshUrls)

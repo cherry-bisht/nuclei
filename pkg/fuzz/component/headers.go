@@ -6,6 +6,7 @@ import (
 
 	"github.com/projectdiscovery/nuclei/v3/pkg/fuzz/dataformat"
 	"github.com/projectdiscovery/retryablehttp-go"
+	mapsutil "github.com/projectdiscovery/utils/maps"
 )
 
 // Header is a component for a request header
@@ -33,15 +34,16 @@ func (q *Header) Parse(req *retryablehttp.Request) (bool, error) {
 	q.req = req
 	q.value = NewValue("")
 
-	parsedHeaders := make(map[string]interface{})
-	for key, value := range req.Header {
+	parsedHeaders := mapsutil.NewOrderedMap[string, any]()
+	for _, key := range mapsutil.GetSortedKeys(req.Header) {
+		value := req.Header[key]
 		if len(value) == 1 {
-			parsedHeaders[key] = value[0]
+			parsedHeaders.Set(key, value[0])
 			continue
 		}
-		parsedHeaders[key] = value
+		parsedHeaders.Set(key, value)
 	}
-	q.value.SetParsed(dataformat.KVMap(parsedHeaders), "")
+	q.value.SetParsed(dataformat.KVOrderedMap(&parsedHeaders), "")
 	return true, nil
 }
 
